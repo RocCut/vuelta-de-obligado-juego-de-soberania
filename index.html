@@ -410,6 +410,14 @@ function bindGameButton(id, action) {
 
 bindGameButton('btn-fire', fireCannon);
 bindGameButton('btn-chain', repairChains);
+
+        // Disparar tocando directamente la pantalla del juego
+canvas.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+    fireCannon();
+}, { passive: false });
+
+        
         
         window.addEventListener('keydown', (e) => {
             if (!gameStarted || gameOver) return;
