@@ -149,13 +149,22 @@
 
     <!-- ÁREA DE JUEGO -->
     <main id="game-main" class="flex-grow relative w-full h-full bg-slate-950 flex flex-col items-center justify-center overflow-hidden hidden">
-        
-        <div id="game-alert" class="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-slate-900/95 border border-patria-celeste px-4 py-2 rounded-xl text-center shadow-lg transition-all duration-300 transform scale-0 opacity-0 pointer-events-none max-w-[90%]">
+
+        <div id="game-stage" class="relative flex-1 min-h-0 w-full overflow-hidden">
+
+    <div id="game-alert" class="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-slate-900/95 border border-patria-celeste px-4 py-2 rounded-xl text-center shadow-lg transition-all duration-300 transform scale-0 opacity-0 pointer-events-none max-w-[90%]">
+        <span id="alert-text" class="text-xs font-bold text-patria-dorado">¡Dispara con el botón FUEGO!</span>
+    </div>
+
+    <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+</div>
+       <!-- <div id="game-alert" class="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-slate-900/95 border border-patria-celeste px-4 py-2 rounded-xl text-center shadow-lg transition-all duration-300 transform scale-0 opacity-0 pointer-events-none max-w-[90%]">
             <span id="alert-text" class="text-xs font-bold text-patria-dorado">¡Dispara con el botón FUEGO!</span>
         </div>
 
-        <canvas id="gameCanvas" class="w-full h-full block"></canvas>
-
+        <canvas id="gameCanvas" class="w-full h-full block"></canvas>-->
+        
         <div class="floating-controls">
             <button id="btn-chain" class="touch-btn flex-1 max-w-[180px] bg-amber-600/90 hover:bg-amber-500 active:bg-amber-700 text-white font-black py-3.5 px-3 rounded-2xl text-xs flex items-center justify-center gap-2 border-2 border-amber-400 uppercase tracking-wider">
                 <i class="fa-solid fa-wrench text-base"></i>
