@@ -49,26 +49,38 @@
             transform: translateY(4px);
             box-shadow: 0 2px 0 #000;
         }
-        .floating-controls {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            padding: 0 16px;
-            z-index: 20;
-            pointer-events: none;
-        }
         
-            .floating-controls button {
+    
+        .floating-controls {
+    position: relative;
+    width: 100%;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    background: #0B132B;
+    border-top: 2px solid #75AADB;
+    z-index: 20;
+    pointer-events: auto;
+}
+
+.floating-controls button {
     pointer-events: auto;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
+    min-height: 48px;
     backdrop-filter: blur(8px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            }
+    box-shadow: 0 5px 12px rgba(0,0,0,0.4);
+}
+        
+        
+            
+            
+    
+            
             
             
         
