@@ -389,9 +389,22 @@
             showAlert("¡CADENA TENSADA Y REFORZADA!");
         }
 
-        document.getElementById('btn-fire').addEventListener('click', fireCannon);
-        document.getElementById('btn-chain').addEventListener('click', repairChains);
+       // document.getElementById('btn-fire').addEventListener('click', fireCannon);
+       // document.getElementById('btn-chain').addEventListener('click', repairChains);
 
+        // Controles compatibles con celulares y computadoras
+function bindGameButton(id, action) {
+    const button = document.getElementById(id);
+
+    button.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        action();
+    }, { passive: false });
+}
+
+bindGameButton('btn-fire', fireCannon);
+bindGameButton('btn-chain', repairChains);
+        
         window.addEventListener('keydown', (e) => {
             if (!gameStarted || gameOver) return;
             if (e.code === 'Space') {
