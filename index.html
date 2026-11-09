@@ -61,11 +61,17 @@
             z-index: 20;
             pointer-events: none;
         }
-        .floating-controls button {
-            pointer-events: auto;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-        }
+        
+            .floating-controls button {
+    pointer-events: auto;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            }
+            
+            
+        
     </style>
 </head>
 <body class="h-screen w-screen flex flex-col justify-between font-sans select-none overflow-hidden">
