@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Defensa de Obligado - 20 de Noviembre</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        arcade: ['"Press Start 2P"', 'monospace'],
+                        sans: ['Montserrat', 'sans-serif']
+                    },
+                    colors: {
+                        patria: {
+                            celeste: '#75AADB',
+                            azul: '#1B365D',
+                            oscuro: '#0B132B',
+                            dorado: '#F6B40E',
+                            rojo: '#E63946'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #060B19;
+            color: #FFFFFF;
+            user-select: none;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+        canvas {
+            background: #0f172a;
+            touch-action: none;
+        }
+        .touch-btn {
+            box-shadow: 0 6px 0 #000;
+            transition: all 0.1s ease;
+        }
+        .touch-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #000;
+        }
+        .floating-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 0 16px;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .floating-controls button {
+            pointer-events: auto;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col justify-between font-sans select-none overflow-hidden">
+
+    <!-- PANTALLA DE INICIO -->
+    <div id="start-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-patria-oscuro via-slate-900 to-patria-oscuro p-6 text-center">
+        
+        <div class="mb-6">
+            <div class="w-20 h-20 rounded-full bg-patria-celeste/20 border-4 border-patria-celeste flex items-center justify-center mx-auto shadow-lg shadow-patria-celeste/30">
+                <i class="fa-solid fa-shield-halved text-4xl text-patria-celeste"></i>
+            </div>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight mb-1">
+            DEFENSA DE OBLIGADO
+        </h1>
+        <p class="text-patria-celeste font-bold text-sm tracking-widest uppercase mb-6">
+            20 de Noviembre · Día de la Soberanía Nacional
+        </p>
+
+        <div class="max-w-md bg-slate-900/80 border border-slate-700 rounded-2xl p-5 mb-8 text-left">
+            <p class="text-sm text-slate-300 leading-relaxed">
+                En 1845, las flotas de Gran Bretaña y Francia intentaron forzar el paso del Río Paraná. 
+                El General Lucio Mansilla tendió cadenas de hierro y defendió la soberanía argentina desde las barrancas de Obligado.
+            </p>
+            <p class="text-xs text-patria-dorado mt-3 font-semibold">
+                ¿Podrás resistir el embate y repeler a la flota invasora?
+            </p>
+        </div>
+
+        <button id="btn-start" class="touch-btn bg-patria-rojo hover:bg-red-500 active:bg-red-700 text-white font-black py-4 px-10 rounded-2xl text-base uppercase tracking-wider border-2 border-red-300 shadow-xl flex items-center gap-3">
+            <i class="fa-solid fa-play"></i>
+            Iniciar Juego
+        </button>
+
+        <p class="absolute bottom-6 text-[10px] text-slate-500">
+            Juego educativo · Vuelta de Obligado 1845
+        </p>
+    </div>
+
+    <!-- HEADER DEL JUEGO -->
+    <header id="game-header" class="bg-patria-oscuro border-b-2 border-patria-celeste px-3 py-2 flex justify-between items-center shadow-lg shrink-0 z-30 hidden">
+        <div class="flex items-center gap-2">
+            <i class="fa-solid fa-shield-halved text-patria-celeste text-lg"></i>
+            <div>
+                <h1 class="text-xs sm:text-sm font-black text-white leading-none">DEFENSA DE OBLIGADO</h1>
+                <span class="text-[9px] text-patria-celeste font-bold">20 DE NOVIEMBRE</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 text-xs font-mono bg-slate-900 px-3 py-1 rounded-lg border border-slate-700">
+            <div>
+                <span class="text-slate-400 text-[10px]">CADENAS:</span>
+                <span id="ui-chain" class="font-bold text-emerald-400">100%</span>
+            </div>
+            <div class="h-3 w-px bg-slate-700"></div>
+            <div>
+                <span class="text-slate-400 text-[10px]">REPELIDOS:</span>
+                <span id="ui-score" class="font-bold text-amber-400">0 / 100</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ÁREA DE JUEGO -->
+    <main id="game-main" class="flex-grow relative w-full h-full bg-slate-950 flex flex-col items-center justify-center overflow-hidden hidden">
+        
+        <div id="game-alert" class="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-slate-900/95 border border-patria-celeste px-4 py-2 rounded-xl text-center shadow-lg transition-all duration-300 transform scale-0 opacity-0 pointer-events-none max-w-[90%]">
+            <span id="alert-text" class="text-xs font-bold text-patria-dorado">¡Dispara con el botón FUEGO!</span>
+        </div>
+
+        <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+
+        <div class="floating-controls">
+            <button id="btn-chain" class="touch-btn flex-1 max-w-[180px] bg-amber-600/90 hover:bg-amber-500 active:bg-amber-700 text-white font-black py-3.5 px-3 rounded-2xl text-xs flex items-center justify-center gap-2 border-2 border-amber-400 uppercase tracking-wider">
+                <i class="fa-solid fa-wrench text-base"></i>
+                <span>Reforzar</span>
+            </button>
+            <button id="btn-fire" class="touch-btn flex-1 max-w-[180px] bg-patria-rojo/90 hover:bg-red-500 active:bg-red-700 text-white font-black py-3.5 px-3 rounded-2xl text-sm flex items-center justify-center gap-2 border-2 border-red-300 uppercase tracking-wider">
+                <i class="fa-solid fa-crosshair text-lg"></i>
+                <span>¡FUEGO!</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- MODAL DE HISTORIA -->
+    <div id="modal-story" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-40 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 text-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border-2 border-patria-dorado text-center relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-24 h-24 bg-patria-dorado/10 rounded-full blur-xl"></div>
+            <span id="story-chapter" class="text-[10px] font-bold uppercase tracking-widest text-patria-celeste bg-slate-800 px-3 py-1 rounded-full inline-block mb-3 border border-slate-700">HISTORIA EN EL RÍO</span>
+            
+            <h3 id="story-title" class="text-base font-black text-patria-dorado mb-2">¡Comienza la Resistencia!</h3>
+            <p id="story-body" class="text-xs text-slate-200 leading-relaxed my-3 font-sans italic">
+                Texto del capítulo...
+            </p>
+
+            <button onclick="resumeGame();" class="w-full mt-2 bg-patria-celeste hover:bg-sky-500 text-slate-950 font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition-colors shadow-lg">
+                Continuar Combate <i class="fa-solid fa-play ml-1"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL FINAL CON PUNTAJE Y RANKING -->
+    <div id="modal-edition" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 text-white rounded-2xl max-w-md w-full p-5 shadow-2xl border-2 border-patria-celeste text-center max-h-[90vh] overflow-y-auto">
+            
+            <i class="fa-solid fa-flag-checkered text-4xl text-patria-dorado mb-2"></i>
+            <h2 id="modal-title" class="text-xl font-black text-white uppercase tracking-tight">¡RESISTENCIA HEROICA!</h2>
+            <p id="modal-desc" class="text-xs text-slate-300 mt-2 leading-relaxed mb-4">
+                Las cadenas de Obligado soportaron el embate invasor.
+            </p>
+
+            <div class="bg-slate-800 rounded-xl p-4 mb-4">
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Tu Puntaje</p>
+                <p id="final-points" class="text-3xl font-black text-patria-dorado">0</p>
+                <div class="flex justify-center gap-6 mt-3 text-xs font-mono">
+                    <div>
+                        <span class="text-slate-400 block text-[10px]">BARCOS</span>
+                        <span id="final-score" class="font-bold text-amber-400">0 / 100</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[10px]">CADENAS</span>
+                        <span id="final-chain" class="font-bold text-emerald-400">100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/80 rounded-xl p-4 mb-5 text-left">
+                <p class="text-[10px] text-slate-400 uppercase tracking-wider mb-3 text-center">Mejores Puntajes</p>
+                <div id="highscores-list" class="space-y-2 text-sm"></div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <button onclick="playAgain()" class="w-full bg-patria-rojo hover:bg-red-500 text-white font-black py-3 rounded-xl text-sm uppercase transition-colors">
+                    Jugar de Nuevo
+                </button>
+                <button onclick="goToStartScreen()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl text-sm uppercase transition-colors">
+                    Volver al Inicio
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let chainHP = 100;
+        let score = 0;
+        let gameOver = false;
+        let gamePaused = false;
+        let gameStarted = false;
+        const TARGET_SCORE = 100;
+        let currentChapterIndex = 0;
+        let lastTipScore = 0;
+
+        const storyChapters = [
+            {
+                trigger: 25,
+                title: "1. Flotas Extranjeras en el Paraná",
+                text: "En 1845, las potencias de Gran Bretaña y Francia pretendían navegar nuestros ríos interiores sin permiso ni pagar tributos. Buscaban imponer el comercio sin respetar la soberanía argentina."
+            },
+            {
+                trigger: 50,
+                title: "2. La Estrategia de las Cadenas",
+                text: "Para frenar el avance de más de 90 buques mercantes y de guerra, el General Lucio Mansilla tendió tres gruesas cadenas de hierro cruzando el Río Paraná, sostenidas sobre 24 barcones de madera."
+            },
+            {
+                trigger: 75,
+                title: "3. Artillería en las Barrancas",
+                text: "En las altas barrancas de San Pedro se apostaron 4 baterías de cañones con nombres patrios: Manuel Belgrano, General Mansilla, General Zapiola y Eduardo Brown. La resistencia duró casi 10 horas."
+            },
+            {
+                trigger: 100,
+                title: "4. El Significado del 20 de Noviembre",
+                text: "Hoy conmemoramos la Batalla de Vuelta de Obligado como el Día de la Soberanía Nacional: el derecho independiente de un pueblo a defender sus ríos, tierras y recursos estratégicos."
+            }
+        ];
+
+        const shortTips = [
+            { score: 10,  text: "1845: Francia y Gran Bretaña quieren navegar el Paraná sin permiso." },
+            { score: 20,  text: "El General Lucio Mansilla organiza la defensa en Vuelta de Obligado." },
+            { score: 30,  text: "Se tienden tres cadenas de hierro sostenidas por 24 barcones." },
+            { score: 40,  text: "Cuatro baterías de artillería defienden desde las barrancas." },
+            { score: 60,  text: "El combate dura casi 10 horas de resistencia heroica." },
+            { score: 70,  text: "Aunque las cadenas ceden, la flota enemiga queda muy dañada." },
+            { score: 80,  text: "La resistencia obliga a las potencias a negociar después." },
+            { score: 90,  text: "Se logra el reconocimiento de la soberanía sobre los ríos." }
+        ];
+
+        let ships = [];
+        let particles = [];
+        let shots = [];
+        let cannonAngle = -Math.PI / 4;
+
+        function getHighScores() {
+            try {
+                return JSON.parse(localStorage.getItem('obligado_highscores')) || [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveHighScore(points, shipsDestroyed, chainLeft) {
+            let scores = getHighScores();
+            scores.push({
+                points: points,
+                ships: shipsDestroyed,
+                chain: chainLeft,
+                date: new Date().toLocaleDateString('es-AR')
+            });
+            scores.sort((a, b) => b.points - a.points);
+            scores = scores.slice(0, 8);
+            localStorage.setItem('obligado_highscores', JSON.stringify(scores));
+            return scores;
+        }
+
+        function renderHighScores(scores, currentPoints) {
+            const container = document.getElementById('highscores-list');
+            if (!scores.length) {
+                container.innerHTML = `<p class="text-slate-500 text-center text-xs">Todavía no hay puntajes guardados</p>`;
+                return;
+            }
+
+            container.innerHTML = scores.map((s, i) => {
+                const isCurrent = s.points === currentPoints;
+                return `
+                    <div class="flex justify-between items-center ${isCurrent ? 'bg-patria-dorado/20 border border-patria-dorado/50' : ''} rounded-lg px-3 py-1.5">
+                        <div class="flex items-center gap-2">
+                            <span class="text-patria-celeste font-bold w-5">${i + 1}.</span>
+                            <span class="${isCurrent ? 'text-patria-dorado font-bold' : 'text-white'}">${s.points} pts</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">${s.ships} barcos · ${s.chain}%</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function resizeCanvas() {
+            if (!canvas.parentElement) return;
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        class Ship {
+            constructor() {
+                this.x = -50;
+                this.y = Math.random() * (canvas.height * 0.4) + (canvas.height * 0.2);
+                this.speed = Math.random() * 0.8 + 0.6;
+                this.width = 45;
+                this.height = 20;
+                this.hp = 2;
+            }
+
+            update() {
+                const chainX = canvas.width * 0.65;
+                if (this.x < chainX - 35) {
+                    this.x += this.speed;
+                } else {
+                    chainHP -= 0.07;
+                    if (Math.random() < 0.08) createSparks(this.x + 20, this.y);
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+
+                ctx.fillStyle = "#334155";
+                ctx.beginPath();
+                ctx.moveTo(0, 8);
+                ctx.lineTo(35, 8);
+                ctx.lineTo(45, 18);
+                ctx.lineTo(5, 18);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = "#94a3b8";
+                ctx.fillRect(18, -6, 3, 14);
+
+                ctx.fillStyle = "#ef4444";
+                ctx.fillRect(2, 0, 7, 5);
+
+                ctx.restore();
+            }
+        }
+
+        function createSparks(x, y) {
+            for (let i = 0; i < 4; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    life: 15,
+                    color: '#f59e0b'
+                });
+            }
+        }
+
+        function fireCannon() {
+            if (!gameStarted || gameOver || gamePaused) return;
+
+            const cannonX = canvas.width * 0.85;
+            const cannonY = canvas.height * 0.75;
+
+            shots.push({
+                x: cannonX,
+                y: cannonY,
+                vx: Math.cos(cannonAngle) * 15,
+                vy: Math.sin(cannonAngle) * 15
+            });
+
+            createSparks(cannonX + Math.cos(cannonAngle)*20, cannonY + Math.sin(cannonAngle)*20);
+        }
+
+        function repairChains() {
+            if (!gameStarted || gameOver || gamePaused) return;
+            chainHP = Math.min(100, chainHP + 12);
+            createSparks(canvas.width * 0.65, canvas.height * 0.5);
+            showAlert("¡CADENA TENSADA Y REFORZADA!");
+        }
+
+        document.getElementById('btn-fire').addEventListener('click', fireCannon);
+        document.getElementById('btn-chain').addEventListener('click', repairChains);
+
+        window.addEventListener('keydown', (e) => {
+            if (!gameStarted || gameOver) return;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                fireCannon();
+            }
+            if (e.key.toLowerCase() === 'r') {
+                repairChains();
+            }
+        });
+
+        function showAlert(msg) {
+            const el = document.getElementById('game-alert');
+            document.getElementById('alert-text').textContent = msg;
+            el.classList.remove('scale-0', 'opacity-0');
+            el.classList.add('scale-100', 'opacity-100');
+            clearTimeout(window.alertTimer);
+            window.alertTimer = setTimeout(() => {
+                el.classList.remove('scale-100', 'opacity-100');
+                el.classList.add('scale-0', 'opacity-0');
+            }, 2800);
+        }
+
+        function checkStoryTrigger() {
+            if (currentChapterIndex < storyChapters.length) {
+                let chapter = storyChapters[currentChapterIndex];
+                if (score >= chapter.trigger) {
+                    showStoryModal(chapter);
+                    currentChapterIndex++;
+                    return;
+                }
+            }
+
+            for (let tip of shortTips) {
+                if (score >= tip.score && tip.score > lastTipScore) {
+                    showAlert(tip.text);
+                    lastTipScore = tip.score;
+                    break;
+                }
+            }
+        }
+
+        function showStoryModal(chapter) {
+            gamePaused = true;
+            document.getElementById('story-chapter').textContent = `CAPÍTULO ${currentChapterIndex + 1} DE ${storyChapters.length}`;
+            document.getElementById('story-title').textContent = chapter.title;
+            document.getElementById('story-body').textContent = `"${chapter.text}"`;
+            document.getElementById('modal-story').classList.remove('hidden');
+        }
+
+        function resumeGame() {
+            document.getElementById('modal-story').classList.add('hidden');
+            gamePaused = false;
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameLoop() {
+            if (!gameStarted || gameOver || gamePaused) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Río
+            ctx.fillStyle = "#0284c7";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Barranca
+            ctx.fillStyle = "#15803d";
+            ctx.beginPath();
+            ctx.moveTo(canvas.width * 0.75, 0);
+            ctx.lineTo(canvas.width, 0);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(canvas.width * 0.75, canvas.height);
+            ctx.quadraticCurveTo(canvas.width * 0.7, canvas.height * 0.5, canvas.width * 0.75, 0);
+            ctx.fill();
+
+            // Cadenas
+            const chainX = canvas.width * 0.65;
+            ctx.strokeStyle = chainHP > 30 ? "#e2e8f0" : "#ef4444";
+            ctx.lineWidth = 5;
+            ctx.setLineDash([10, 6]);
+            ctx.beginPath();
+            ctx.moveTo(chainX, 0);
+            ctx.lineTo(chainX, canvas.height);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            for (let y = 30; y < canvas.height; y += 60) {
+                ctx.fillStyle = "#78350f";
+                ctx.fillRect(chainX - 8, y, 16, 8);
+            }
+
+            // Cañón
+            const cannonX = canvas.width * 0.85;
+            const cannonY = canvas.height * 0.75;
+
+            if (ships.length > 0) {
+                let targetShip = ships[0];
+                for (let s of ships) {
+                    if (s.x > targetShip.x) targetShip = s;
+                }
+                let dx = targetShip.x - cannonX;
+                let dy = targetShip.y - cannonY;
+                cannonAngle = Math.atan2(dy, dx);
+            } else {
+                cannonAngle = -Math.PI * 0.8;
+            }
+
+            ctx.save();
+            ctx.translate(cannonX, cannonY);
+            ctx.rotate(cannonAngle);
+            ctx.fillStyle = "#0f172a";
+            ctx.fillRect(0, -6, 35, 12);
+            ctx.restore();
+
+            ctx.fillStyle = "#451a03";
+            ctx.beginPath();
+            ctx.arc(cannonX, cannonY, 12, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Spawn
+            if (Math.random() < 0.02 && ships.length < 5) {
+                ships.push(new Ship());
+            }
+
+            ships.forEach(s => {
+                s.update();
+                s.draw();
+            });
+
+            // Balas
+            for (let i = shots.length - 1; i >= 0; i--) {
+                let sh = shots[i];
+                sh.x += sh.vx;
+                sh.y += sh.vy;
+
+                ctx.fillStyle = "#000000";
+                ctx.beginPath();
+                ctx.arc(sh.x, sh.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                for (let j = ships.length - 1; j >= 0; j--) {
+                    let s = ships[j];
+                    if (Math.abs(sh.x - s.x) < 30 && Math.abs(sh.y - s.y) < 20) {
+                        s.hp -= 1;
+                        shots.splice(i, 1);
+                        createSparks(s.x, s.y);
+
+                        if (s.hp <= 0) {
+                            ships.splice(j, 1);
+                            score += 1;
+                            document.getElementById('ui-score').textContent = `${score} / ${TARGET_SCORE}`;
+                            checkStoryTrigger();
+                        }
+                        break;
+                    }
+                }
+
+                if (sh.x < 0 || sh.y < 0 || sh.y > canvas.height) {
+                    shots.splice(i, 1);
+                }
+            }
+
+            // Partículas
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 1;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            // Actualizar UI
+            chainHP = Math.max(0, chainHP);
+            document.getElementById('ui-chain').textContent = `${Math.round(chainHP)}%`;
+
+            // Condición de fin
+            if (chainHP <= 0 || score >= TARGET_SCORE) {
+                endGame();
+                return;
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function calculatePoints(shipsDestroyed, chainLeft) {
+            let points = (shipsDestroyed * 10) + (Math.round(chainLeft) * 5);
+            if (shipsDestroyed >= TARGET_SCORE) {
+                points += 200;
+            }
+            return points;
+        }
+
+        function endGame() {
+            if (gameOver) return;
+            gameOver = true;
+
+            const chainLeft = Math.round(chainHP);
+            const points = calculatePoints(score, chainLeft);
+
+            document.getElementById('final-score').textContent = `${score} / ${TARGET_SCORE}`;
+            document.getElementById('final-chain').textContent = `${chainLeft}%`;
+            document.getElementById('final-points').textContent = points;
+
+            if (score >= TARGET_SCORE) {
+                document.getElementById('modal-title').textContent = "¡VICTORIA PATRIÓTICA TOTAL!";
+                document.getElementById('modal-desc').textContent = "Has repelido los 100 ataques de la flota anglo-francesa y mantenido la firmeza del territorio nacional.";
+            } else {
+                document.getElementById('modal-title').textContent = "¡RESISTENCIA HEROICA!";
+                document.getElementById('modal-desc').textContent = "Las cadenas cedieron, pero la resistencia causó graves daños y obligó a las potencias a negociar.";
+            }
+
+            const scores = saveHighScore(points, score, chainLeft);
+            renderHighScores(scores, points);
+
+            document.getElementById('modal-edition').classList.remove('hidden');
+        }
+
+        function playAgain() {
+            document.getElementById('modal-edition').classList.add('hidden');
+            resetGame();
+        }
+
+        function goToStartScreen() {
+            document.getElementById('modal-edition').classList.add('hidden');
+            document.getElementById('game-header').classList.add('hidden');
+            document.getElementById('game-main').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            
+            gameStarted = false;
+            gameOver = false;
+            gamePaused = false;
+        }
+
+        function resetGame() {
+            chainHP = 100;
+            score = 0;
+            gameOver = false;
+            gamePaused = false;
+            currentChapterIndex = 0;
+            lastTipScore = 0;
+            ships = [];
+            particles = [];
+            shots = [];
+            document.getElementById('ui-score').textContent = `0 / ${TARGET_SCORE}`;
+            document.getElementById('ui-chain').textContent = "100%";
+            resizeCanvas();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-header').classList.remove('hidden');
+            document.getElementById('game-main').classList.remove('hidden');
+            
+            gameStarted = true;
+            resizeCanvas();
+            resetGame();
+        }
+
+        document.getElementById('btn-start').addEventListener('click', startGame);
+    </script>
+</body>
+</html>
